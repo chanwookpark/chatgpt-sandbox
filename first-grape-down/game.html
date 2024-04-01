@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>향상된 횡스크롤 게임</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="960" height="480"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let score = 0;
+        let totalScore = 0;
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            width: 50,
+            height: 50,
+            speed: 5,
+            dx: 0
+        };
+
+        const fruits = [];
+        const fruitTypes = [
+            { type: 'apple', color: '#FF0000', points: 10 },
+            { type: 'orange', color: '#FFA500', points: 20 },
+            { type: 'banana', color: '#FFFF00', points: 30 },
+            { type: 'grape', color: '#8A2BE2', points: 40 }
+        ];
+
+        function createFruit() {
+            if (fruits.length < 5 && Math.random() < 0.1) { // 최대 5개, 확률로 생성
+                const fruitType = fruitTypes[Math.floor(Math.random() * fruitTypes.length)];
+                fruits.push({
+                    x: Math.random() * canvas.width,
+                    y: 0,
+                    width: 30,
+                    height: 30,
+                    speed: 2,
+                    color: fruitType.color,
+                    points: fruitType.points
+                });
+            }
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = '#0000FF';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function clear() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function newPos() {
+            player.x += player.dx; // 플레이어의 위치를 업데이트
+
+            // 화면 밖으로 나가지 않도록 제한
+            if (player.x < 0) {
+                player.x = 0;
+            } else if (player.x + player.width > canvas.width) {
+                player.x = canvas.width - player.width;
+            }
+        }
+
+        function detectCollision() {
+            fruits.forEach((fruit, index) => {
+                if (player.x < fruit.x + fruit.width &&
+                    player.x + player.width > fruit.x &&
+                    player.y < fruit.y + fruit.height &&
+                    player.y + player.height > fruit.y) {
+                    score = fruit.points; // 과일에 따라 점수 다름
+                    totalScore += score;
+                    fruits.splice(index, 1); // 과일 제거
+                }
+            });
+        }
+
+        function drawFruits() {
+            fruits.forEach(fruit => {
+                fruit.y += fruit.speed;
+                if (fruit.y + fruit.height > canvas.height) {
+                    fruits.splice(fruits.indexOf(fruit), 1);
+                } else {
+                    ctx.fillStyle = fruit.color;
+                    ctx.fillRect(fruit.x, fruit.y, fruit.width, fruit.height);
+                }
+            });
+        }
+
+        function drawScore() {
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#000';
+            ctx.fillText('Score: ' + score, 10, 20);
+            ctx.fillText('Total Score: ' + totalScore, 10, 40);
+        }
+
+        function update() {
+            clear();
+            drawPlayer();
+            createFruit();
+            drawFruits();
+            drawScore();
+            newPos(); // 이 부분이 플레이어 위치를 업데이트합니다.
+            detectCollision();
+            requestAnimationFrame(update);
+        }
+
+        function moveRight() {
+            player.dx = player.speed;
+        }
+
+        function moveLeft() {
+            player.dx = -player.speed;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'd') {
+                player.dx = player.speed;
+            } else if (e.key === 'ArrowLeft' || e.key === 'a') {
+                player.dx = -player.speed;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'd' || e.key === 'a') {
+                player.dx = 0;
+            }
+        });
+
+        update();
+    </script>
+</body>
+</html>
